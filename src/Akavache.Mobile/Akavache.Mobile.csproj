@@ -5,7 +5,8 @@
     <AssemblyName>Akavache.Mobile</AssemblyName>
     <RootNamespace>Akavache.Mobile</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
-    <PackageId>akavache.mobile</PackageId>
+    <PackageId>WCKYWCKF.akavache.mobile-aot</PackageId>
+    <Version>10.1.6</Version>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="Foundation" />

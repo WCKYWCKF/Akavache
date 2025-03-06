@@ -4,7 +4,8 @@
     <AssemblyName>Akavache.Core</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
-    <PackageId>akavache.core</PackageId>
+    <PackageId>WCKYWCKF.akavache.core-aot</PackageId>
+    <Version>10.1.6</Version>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="Foundation" />

@@ -1,5 +1,5 @@
 {
-  "version": "10.2",
+  "version": "10.1.6",
   "publicReleaseRefSpec": [
     "^refs/heads/main$", // we release out of master
     "^refs/heads/develop$", // we release out of develop
@@ -9,9 +9,9 @@
     "semVer": 2
   },
   "cloudBuild": {
-    "setVersionVariables": true,
+    "setVersionVariables": false,
     "buildNumber": {
-      "enabled": false
+      "enabled": true
     }
   }
 }
