@@ -15,6 +15,67 @@
 
 <img alt="Akavache" src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png" width="150" />
 
+## The AOT version of Akavache
+This is a branch of Akavache that supports AOT(Ahead-of-Time Compilation).The usage is identical to the upstream version,except for the serialization and deserialization parts.
+
+What have I changed?
+
+• There are no breaking changes,but the DI(Dependency Injection)registration of JsonSerializerOptions will no longer work.
+
+• Newtonsoft.Json.Bson has been replaced with MongoDB.Bson.
+
+• Most of the invalidated code has been commented out,with a few parts modified.
+
+Information you need to know as of March 7,2025:
+
+• I have not yet tested compatibility with the upstream project.In other words,I don't know if this branch can parse data created by the upstream project.
+
+• The project is still in beta and has not been officially released.
+
+• The version numbers of the project's NuGet packages correspond to the upstream project,but an additional suffix has been added to indicate AOT-specific fixes.
+
+NuGet packages published by this project:
+
+• WCKYWCKF.akavache-aot
+
+• WCKYWCKF.akavache.core-aot
+
+• WCKYWCKF.akavache.mobile-aot
+
+• WCKYWCKF.akavache.sqlite3-aot
+
+[//]: # (这是一个支持AOT的Akavache分支，使用方式除了序列化与反序列化部分之外与上游并无区别。)
+
+[//]: # ()
+[//]: # (我修改了什么？)
+
+[//]: # (* 没有破坏性更改，但JsonSerializerOptions的DI注册将失效。)
+
+[//]: # (* 使用MongoDB.Bson替换了Newtonsoft.Json.Bson。)
+
+[//]: # (* 失效的代码被大多被注释，少数被更改。)
+
+[//]: # ()
+[//]: # (截至2025年3月7日你需要知道的信息。)
+
+[//]: # (* 我还没有测试与上游项目的兼容性。 简而言之，我还不知道这个分支能不能解析由上游项目创建的数据。)
+
+[//]: # (* 这个项目仍处于beta版本，还未正式发版。)
+
+[//]: # (* 项目Nuget包的版本号与上游项目对应，但末尾添加了一个位置用于标记属于AOT的修复。)
+
+[//]: # ()
+[//]: # (本项目发布的Nuget包。)
+
+[//]: # (* WCKYWCKF.akavache-aot)
+
+[//]: # (* WCKYWCKF.akavache.core-aot)
+
+[//]: # (* WCKYWCKF.akavache.mobile-aot)
+
+[//]: # (* WCKYWCKF.akavache.sqlite3-aot)
+
+
 ## Akavache: An Asynchronous Key-Value Store for Native Applications <!-- omit in toc -->
 
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
