@@ -1,4 +1,4 @@
-<Project>  
+<Project>
   <PropertyGroup>
     <Copyright>Copyright (c) .NET Foundation and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -28,18 +28,19 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>IDE1006;SA1313;SA1010</NoWarn>
+    <Version>10.1.6.1-pre</Version>
     <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst</AkavacheTargetFrameworks>
     <!--<AkavacheTargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(AkavacheTargetFrameworks);net462</AkavacheTargetFrameworks>-->
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
-    <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\" />
-    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE"/>
+    <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Remove="Foundation" />
+    <Using Remove="Foundation"/>
     <Using Include="System.Reactive"/>
     <Using Include="System.Reactive.Concurrency"/>
     <Using Include="System.Reactive.Linq"/>
@@ -48,15 +49,15 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" /> 
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
   </ItemGroup>
 
   <ItemGroup>
-<!--    <PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115" PrivateAssets="all" />-->
-    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.12.5" PrivateAssets="All" />
+    <!--    <PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115" PrivateAssets="all" />-->
+    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all"/>
+    <PackageReference Include="Roslynator.Analyzers" Version="4.12.5" PrivateAssets="All"/>
   </ItemGroup>
   <ItemGroup>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json"/>
   </ItemGroup>
- </Project>
+</Project>

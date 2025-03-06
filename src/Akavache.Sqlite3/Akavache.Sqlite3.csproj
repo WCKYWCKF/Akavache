@@ -8,7 +8,6 @@
     <PackageId>WCKYWCKF.akavache.sqlite3-aot</PackageId>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <DefineConstants>$(DefineConstants)</DefineConstants>
-    <Version>10.1.6</Version>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="Foundation" />

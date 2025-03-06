@@ -19,30 +19,21 @@
 This is a branch of Akavache that supports AOT(Ahead-of-Time Compilation).The usage is identical to the upstream version,except for the serialization and deserialization parts.
 
 What have I changed?
-
-• There are no breaking changes,but the DI(Dependency Injection)registration of JsonSerializerOptions will no longer work.
-
-• Newtonsoft.Json.Bson has been replaced with MongoDB.Bson.
-
-• Most of the invalidated code has been commented out,with a few parts modified.
+* There are no breaking changes,but the DI(Dependency Injection)registration of JsonSerializerOptions will no longer work.
+* Newtonsoft.Json.Bson has been replaced with MongoDB.Bson.
+* Most of the invalidated code has been commented out,with a few parts modified.
 
 Information you need to know as of March 7,2025:
-
-• I have not yet tested compatibility with the upstream project.In other words,I don't know if this branch can parse data created by the upstream project.
-
-• The project is still in beta and has not been officially released.
-
-• The version numbers of the project's NuGet packages correspond to the upstream project,but an additional suffix has been added to indicate AOT-specific fixes.
+* I have not yet tested compatibility with the upstream project.In other words,I don't know if this branch can parse data created by the upstream project.
+* The project is still in beta and has not been officially released.
+* The version numbers of the project's NuGet packages correspond to the upstream project,but an additional suffix has been added to indicate AOT-specific fixes.
+* The rd.xml file written by this package is very rudimentary,which results in an increase of approximately 4MB in the final size.
 
 NuGet packages published by this project:
-
-• WCKYWCKF.akavache-aot
-
-• WCKYWCKF.akavache.core-aot
-
-• WCKYWCKF.akavache.mobile-aot
-
-• WCKYWCKF.akavache.sqlite3-aot
+* WCKYWCKF.akavache-aot
+* WCKYWCKF.akavache.core-aot
+* WCKYWCKF.akavache.mobile-aot
+* WCKYWCKF.akavache.sqlite3-aot
 
 [//]: # (这是一个支持AOT的Akavache分支，使用方式除了序列化与反序列化部分之外与上游并无区别。)
 
