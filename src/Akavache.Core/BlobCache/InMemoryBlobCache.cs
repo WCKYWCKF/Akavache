@@ -5,8 +5,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
+
+// using Newtonsoft.Json;
+// using Newtonsoft.Json.Bson;
 using Splat;
 
 namespace Akavache;
@@ -19,9 +22,11 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
 {
     [SuppressMessage("Design", "CA2213: non-disposed field.", Justification = "Used for notification of dispose.")]
     private readonly AsyncSubject<Unit> _shutdown = new();
+
     private readonly IDisposable? _inner;
     private readonly Dictionary<string, CacheEntry> _cache = [];
-    private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
+
+    // private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private bool _disposed;
     private DateTimeKind? _dateTimeKind;
 
@@ -87,10 +92,10 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
         {
             _dateTimeKind = value;
 
-            if (_jsonDateTimeContractResolver is not null)
-            {
-                _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
-            }
+            // if (_jsonDateTimeContractResolver is not null)
+            // {
+            //     _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
+            // }
         }
     }
 
@@ -106,7 +111,9 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     /// <param name="scheduler">The default scheduler to use.</param>
     /// <param name="initialContents">The default inner contents to use.</param>
     /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IScheduler? scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
+    public static InMemoryBlobCache OverrideGlobals(
+        IScheduler? scheduler = null,
+        params KeyValuePair<string, byte[]>[] initialContents)
     {
         var local = BlobCache.LocalMachine;
         var user = BlobCache.UserAccount;
@@ -133,7 +140,9 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     /// <param name="initialContents">The default inner contents to use.</param>
     /// <param name="scheduler">The default scheduler to use.</param>
     /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler? scheduler = null) => OverrideGlobals(scheduler, [.. initialContents]);
+    public static InMemoryBlobCache OverrideGlobals(
+        IDictionary<string, byte[]> initialContents,
+        IScheduler? scheduler = null) => OverrideGlobals(scheduler, [.. initialContents]);
 
     /// <summary>
     /// Overrides the global registrations with specified values.
@@ -141,13 +150,23 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     /// <param name="initialContents">The default inner contents to use.</param>
     /// <param name="scheduler">The default scheduler to use.</param>
     /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler? scheduler = null)
+    public static InMemoryBlobCache OverrideGlobals(
+        IDictionary<string, object> initialContents,
+        IScheduler? scheduler = null)
     {
         var initialSerializedContents = initialContents
-            .Select(item => new KeyValuePair<string, byte[]>(item.Key, JsonSerializationMixin.SerializeObject(item.Value)))
+            .Select(item => new KeyValuePair<string, byte[]>(item.Key, Get(item)))
             .ToArray();
 
         return OverrideGlobals(scheduler, initialSerializedContents);
+
+        byte[] Get(object item)
+        {
+            using MemoryStream stream = new();
+            using BsonBinaryWriter bsonBinaryWriter = new(stream);
+            BsonSerializer.Serialize(bsonBinaryWriter, item);
+            return stream.GetBuffer();
+        }
     }
 
     /// <inheritdoc />
@@ -167,9 +186,9 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     }
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush() => _disposed ?
-        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache)) :
-        Observable.Return(Unit.Default);
+    public IObservable<Unit> Flush() => _disposed
+        ? ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache))
+        : Observable.Return(Unit.Default);
 
     /// <inheritdoc />
     public IObservable<byte[]> Get(string key)
@@ -285,7 +304,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
             return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        var data = SerializeObject(value);
+        var data = InMemoryBlobCache.SerializeObject(value);
 
         lock (_cache)
         {
@@ -347,7 +366,8 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
         {
             return Observable.Return(
                 _cache
-                    .Where(x => x.Value.TypeName == typeof(T).FullName && (x.Value.ExpiresAt is null || x.Value.ExpiresAt >= Scheduler.Now))
+                    .Where(x => x.Value.TypeName == typeof(T).FullName &&
+                                (x.Value.ExpiresAt is null || x.Value.ExpiresAt >= Scheduler.Now))
                     .Select(x => DeserializeObject<T>(x.Value.Value))
                     .ToList(),
                 Scheduler);
@@ -355,9 +375,9 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     }
 
     /// <inheritdoc />
-    public IObservable<Unit> InvalidateObject<T>(string key) => _disposed ?
-        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache)) :
-        Invalidate(key);
+    public IObservable<Unit> InvalidateObject<T>(string key) => _disposed
+        ? ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache))
+        : Invalidate(key);
 
     /// <inheritdoc />
     public IObservable<Unit> InvalidateAllObjects<T>()
@@ -389,7 +409,8 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
 
         lock (_cache)
         {
-            var toDelete = _cache.Where(x => x.Value.ExpiresAt is not null && Scheduler.Now > x.Value.ExpiresAt).ToArray();
+            var toDelete = _cache.Where(x => x.Value.ExpiresAt is not null && Scheduler.Now > x.Value.ExpiresAt)
+                .ToArray();
             foreach (var kvp in toDelete)
             {
                 _cache.Remove(kvp.Key);
@@ -434,30 +455,30 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
         _disposed = true;
     }
 
-    private byte[] SerializeObject<T>(T value)
+    private static byte[] SerializeObject<T>(T value)
     {
-        var serializer = GetSerializer();
+        // var serializer = GetSerializer();
         using var ms = new MemoryStream();
-        using var writer = new BsonDataWriter(ms);
-        serializer.Serialize(writer, new ObjectWrapper<T>(value));
+        using var writer = new BsonBinaryWriter(ms);
+        BsonSerializer.Serialize(writer, new ObjectWrapper<T>(value));
         return ms.ToArray();
     }
 
     private T DeserializeObject<T>(byte[] data)
     {
 #pragma warning disable CS8603 // Possible null reference return.
-        var serializer = GetSerializer();
-        using var reader = new BsonDataReader(new MemoryStream(data));
+        // var serializer = GetSerializer();
+        using var reader = new BsonBinaryReader(new MemoryStream(data));
         var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
 
         if (forcedDateTimeKind.HasValue)
         {
-            reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+            // reader.DateTimeKindHandling = forcedDateTimeKind.Value;
         }
 
         try
         {
-            var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
+            var wrapper = BsonSerializer.Deserialize<ObjectWrapper<T>>(reader);
 
             return wrapper is null ? default : wrapper.Value;
         }
@@ -466,23 +487,23 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
             this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
         }
 
-        return serializer.Deserialize<T>(reader);
+        return BsonSerializer.Deserialize<T>(reader);
 #pragma warning restore CS8603 // Possible null reference return.
     }
 
-    private JsonSerializer GetSerializer()
-    {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-        JsonSerializer serializer;
-
-        lock (settings)
-        {
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            serializer = JsonSerializer.Create(settings);
-            settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
-        }
-
-        return serializer;
-    }
+    // private JsonSerializer GetSerializer()
+    // {
+    //     var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+    //     JsonSerializer serializer;
+    //
+    //     lock (settings)
+    //     {
+    //         _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
+    //         settings.ContractResolver = _jsonDateTimeContractResolver;
+    //         serializer = JsonSerializer.Create(settings);
+    //         settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
+    //     }
+    //
+    //     return serializer;
+    // }
 }

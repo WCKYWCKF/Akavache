@@ -8,12 +8,15 @@
     <PackageId>akavache</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <Using Remove="Foundation" />
+    <Using Remove="Foundation"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <RdXmlFile Include="rd.xml"/>
   </ItemGroup>
 </Project>

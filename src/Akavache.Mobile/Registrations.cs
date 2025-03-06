@@ -4,7 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
-using Newtonsoft.Json;
+
+// using Newtonsoft.Json;
 using ReactiveUI;
 using Splat;
 
@@ -28,27 +29,30 @@ public class Registrations : IWantsToRegisterStuff
         ArgumentNullException.ThrowIfNull(resolver);
 #endif
 
-        resolver.Register(
-            () => new JsonSerializerSettings
-            {
-                ObjectCreationHandling = ObjectCreationHandling.Replace,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                TypeNameHandling = TypeNameHandling.All,
-            },
-            typeof(JsonSerializerSettings),
-            null);
-
+        // resolver.Register(
+        //     () => new bsonop
+        //     {
+        //         ObjectCreationHandling = ObjectCreationHandling.Replace,
+        //         ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+        //         TypeNameHandling = TypeNameHandling.All,
+        //     },
+        //     typeof(JsonSerializerSettings),
+        //     null);
         var akavacheDriver = new AkavacheDriver();
         resolver.Register(() => akavacheDriver, typeof(ISuspensionDriver), null);
 
         // NB: These correspond to the hacks in Akavache.Http's registrations
         resolver.Register(
-            () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.ShouldPersistState ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
+            () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.ShouldPersistState ??
+                  throw new InvalidOperationException(
+                      "Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
             typeof(IObservable<IDisposable>),
             "ShouldPersistState");
 
         resolver.Register(
-            () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.IsUnpausing ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
+            () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.IsUnpausing ??
+                  throw new InvalidOperationException(
+                      "Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
             typeof(IObservable<Unit>),
             "IsUnpausing");
 

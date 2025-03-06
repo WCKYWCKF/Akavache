@@ -6,10 +6,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reactive.Disposables;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
-
+// using Newtonsoft.Json;
+// using Newtonsoft.Json.Bson;
 using Splat;
 using SQLite;
 
@@ -25,7 +26,8 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
     private readonly IObservable<Unit> _initializer;
     [SuppressMessage("Design", "CA2213: Dispose field", Justification = "Used to indicate disposal.")]
     private readonly AsyncSubject<Unit> _shutdown = new();
-    private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
+
+    // private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private SqliteOperationQueue? _opQueue;
     private IDisposable? _queueThread;
     private DateTimeKind? _dateTimeKind;
@@ -55,10 +57,10 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         {
             _dateTimeKind = value;
 
-            if (_jsonDateTimeContractResolver is not null)
-            {
-                _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
-            }
+            // if (_jsonDateTimeContractResolver is not null)
+            // {
+            //     _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
+            // }
         }
     }
 
@@ -755,31 +757,30 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache") :
             Observable.Return(data, scheduler);
 
-    private byte[] SerializeObject<T>(T value)
+    private static byte[] SerializeObject<T>(T value)
     {
-        var serializer = GetSerializer();
         using var ms = new MemoryStream();
-        using var writer = new BsonDataWriter(ms);
-        serializer.Serialize(writer, new ObjectWrapper<T>(value));
+        using var writer = new BsonBinaryWriter(ms);
+        BsonSerializer.Serialize(writer, new ObjectWrapper<T>(value));
         return ms.ToArray();
     }
 
     private IObservable<T?> DeserializeObject<T>(byte[] data)
     {
-        var serializer = GetSerializer();
-        using var reader = new BsonDataReader(new MemoryStream(data));
+        // var serializer = GetSerializer();
+        using var reader = new BsonBinaryReader(new MemoryStream(data));
         var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
 
         if (forcedDateTimeKind.HasValue)
         {
-            reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+            // reader.DateTimeKindHandling = forcedDateTimeKind.Value;
         }
 
         try
         {
             try
             {
-                var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+                var boxedVal = BsonSerializer.Deserialize<ObjectWrapper<T>>(reader).Value;
                 return Observable.Return(boxedVal);
             }
             catch (Exception ex)
@@ -787,7 +788,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
                 this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
             }
 
-            var rawVal = serializer.Deserialize<T>(reader);
+            var rawVal = BsonSerializer.Deserialize<T>(reader);
             return Observable.Return(rawVal);
         }
         catch (Exception ex)
@@ -796,19 +797,19 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         }
     }
 
-    private JsonSerializer GetSerializer()
-    {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-        JsonSerializer serializer;
-
-        lock (settings)
-        {
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            serializer = JsonSerializer.Create(settings);
-            settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
-        }
-
-        return serializer;
-    }
+    // private JsonSerializer GetSerializer()
+    // {
+    //     var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+    //     JsonSerializer serializer;
+    //
+    //     lock (settings)
+    //     {
+    //         _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
+    //         settings.ContractResolver = _jsonDateTimeContractResolver;
+    //         serializer = JsonSerializer.Create(settings);
+    //         settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
+    //     }
+    //
+    //     return serializer;
+    // }
 }

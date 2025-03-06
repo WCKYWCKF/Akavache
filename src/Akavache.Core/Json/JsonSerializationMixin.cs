@@ -6,7 +6,10 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reactive.Threading.Tasks;
-using Newtonsoft.Json;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
+
+// using Newtonsoft.Json;
 using Splat;
 
 namespace Akavache;
@@ -53,8 +56,8 @@ public static class JsonSerializationMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
     public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null) => blobCache is IObjectBlobCache objCache
-            ? objCache.InsertObjects(keyValuePairs, absoluteExpiration)
-            : throw new NotImplementedException();
+        ? objCache.InsertObjects(keyValuePairs, absoluteExpiration)
+        : throw new NotImplementedException();
 
     /// <summary>
     /// Get an object from the cache and deserialize it via the JSON
@@ -122,8 +125,8 @@ public static class JsonSerializationMixin
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
-            ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.GetObject<T>(key).Catch<T?, Exception>(__ =>
+        ? throw new ArgumentNullException(nameof(blobCache))
+        : blobCache.GetObject<T>(key).Catch<T?, Exception>(__ =>
         {
             var prefixedKey = blobCache.GetHashCode().ToString(CultureInfo.InvariantCulture) + key;
 
@@ -156,8 +159,8 @@ public static class JsonSerializationMixin
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
-            ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
+        ? throw new ArgumentNullException(nameof(blobCache))
+        : blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
 
     /// <summary>
     /// <para>
@@ -179,8 +182,8 @@ public static class JsonSerializationMixin
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
     public static IObservable<T?> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
-            ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.GetOrFetchObject(key, () => Observable.Return(fetchFunc()), absoluteExpiration);
+        ? throw new ArgumentNullException(nameof(blobCache))
+        : blobCache.GetOrFetchObject(key, () => Observable.Return(fetchFunc()), absoluteExpiration);
 
     /// <summary>
     /// Returns the time that the key was added to the cache, or returns
@@ -260,9 +263,9 @@ public static class JsonSerializationMixin
             {
                 var fetchObs = fetchFunc().Catch<T, Exception>(ex =>
                 {
-                    var shouldInvalidate = shouldInvalidateOnError ?
-                        blobCache.InvalidateObject<T>(key) :
-                        Observable.Return(Unit.Default);
+                    var shouldInvalidate = shouldInvalidateOnError
+                        ? blobCache.InvalidateObject<T>(key)
+                        : Observable.Return(Unit.Default);
                     return shouldInvalidate.SelectMany(__ => Observable.Throw<T>(ex));
                 });
 
@@ -337,8 +340,8 @@ public static class JsonSerializationMixin
         DateTimeOffset? absoluteExpiration = null,
         bool shouldInvalidateOnError = false,
         Func<T, bool>? cacheValidationPredicate = null) => blobCache is null
-            ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration, shouldInvalidateOnError, cacheValidationPredicate);
+        ? throw new ArgumentNullException(nameof(blobCache))
+        : blobCache.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration, shouldInvalidateOnError, cacheValidationPredicate);
 
     /// <summary>
     /// Invalidates a single object from the cache. It is important that the Type
@@ -379,7 +382,8 @@ public static class JsonSerializationMixin
         var ret = new AsyncSubject<Unit>();
         blobCache.GetAllKeys()
             .SelectMany(x =>
-                x.Where(y => y.StartsWith(GetTypePrefixedKey(string.Empty, typeof(T)), StringComparison.InvariantCulture))
+                x.Where(y =>
+                        y.StartsWith(GetTypePrefixedKey(string.Empty, typeof(T)), StringComparison.InvariantCulture))
                     .ToObservable())
             .SelectMany(blobCache.Invalidate)
             .Subscribe(
@@ -398,20 +402,21 @@ public static class JsonSerializationMixin
 
     internal static byte[] SerializeObject<T>(T value)
     {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>();
-        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
+        // var settings = Locator.Current.GetService<JsonSerializerSettings>();
+        // return Encoding.UTF8.GetBytes();
+        using var stream = new MemoryStream();
+        using var writer = new BsonBinaryWriter(stream);
+        BsonSerializer.Serialize(writer, value);
+        return stream.GetBuffer();
     }
 
     internal static IObservable<T?> DeserializeObject<T>(byte[] x)
     {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>();
-
+        // var settings = Locator.Current.GetService<JsonSerializerSettings>();
         try
         {
             var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
-
-            var ret = JsonConvert.DeserializeObject<T>(bytes, settings);
-            return Observable.Return(ret);
+            return Observable.Return(BsonSerializer.Deserialize<T>(x));
         }
         catch (Exception ex)
         {
