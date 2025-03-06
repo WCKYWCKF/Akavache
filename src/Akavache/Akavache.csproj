@@ -17,6 +17,9 @@
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <RdXmlFile Include="rd.xml"/>
-  </ItemGroup>
+  <None Include="rd.xml">
+    <Pack>true</Pack>
+    <PackagePath>build</PackagePath>
+  </None>
+</ItemGroup>
 </Project>

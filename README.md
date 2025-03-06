@@ -35,6 +35,28 @@ NuGet packages published by this project:
 * WCKYWCKF.akavache.mobile-aot
 * WCKYWCKF.akavache.sqlite3-aot
 
+Add the following content to your rd.xml.
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+    <Application>
+        <!-- 指示不裁剪 MongoDB.Bson 命名空间 -->
+        <Assembly Name="MongoDB.Bson" Dynamic="Required All">
+        </Assembly>
+        <Assembly Name="Akavache" Dynamic="Required All">
+        </Assembly>
+        <Assembly Name="Akavache.Core" Dynamic="Required All">
+        </Assembly>
+        <Assembly Name="Akavache.Sqlite3" Dynamic="Required All">
+        </Assembly>
+        <Assembly Name="SQLite-net" Dynamic="Required All">
+        </Assembly>
+        <Assembly Name="Splat" Dynamic="Required All">
+        </Assembly>
+    </Application>
+</Directives>
+```
+
 [//]: # (这是一个支持AOT的Akavache分支，使用方式除了序列化与反序列化部分之外与上游并无区别。)
 
 [//]: # ()
